@@ -134,11 +134,11 @@ with col1:
     st.subheader("⚡ Preset Scenarios")
 
     presets = {
-        "🟢 NORMAL": {"rsrp": -90, "snr": 18, "accel": 1.0, "voltage": 3.9},
-        "🔵 DEAD ZONE": {"rsrp": -123, "snr": 3, "accel": 1.0, "voltage": 3.85},
-        "🟡 FALSE POSITIVE": {"rsrp": -91, "snr": 16, "accel": 2.8, "voltage": 3.95},
-        "🔴 HOSTILE TAMPER": {"rsrp": -132, "snr": -5, "accel": 4.5, "voltage": 3.1},
-    }
+    "🟢 NORMAL": {"rsrp": -90, "snr": 18, "accel": 1.0, "voltage": 3.9},
+    "🔵 ENVIRONMENTAL DEAD ZONE": {"rsrp": -123, "snr": 3, "accel": 1.0, "voltage": 3.85},
+    "🟡 FALSE POSITIVE": {"rsrp": -91, "snr": 16, "accel": 2.8, "voltage": 3.95},
+    "🔴 HOSTILE TAMPER": {"rsrp": -132, "snr": -5, "accel": 4.5, "voltage": 3.1},
+}
 
     for label, values in presets.items():
         is_active = st.session_state.active_preset == label
