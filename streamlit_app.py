@@ -37,7 +37,7 @@ def run_agent(rsrp, snr, accel, voltage):
         "Content-Type": "application/json"
     }
     base = endpoint.rstrip("/")
-    API_VERSION = "?api-version=2025-01-01"
+    API_VERSION = "?api-version=v1"
 
     prompt = f"""Analyze this telemetry event and classify the threat:
 
