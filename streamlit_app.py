@@ -18,14 +18,12 @@ st.markdown("""
     .stApp { background-color: #0a0a0a; color: #00ff88; }
     .stSlider > div { color: #00ff88; }
     div[data-testid="stMetricValue"] { color: #00ff88; }
-    .preset-active { background-color: #00ff88 !important; color: #000 !important; }
 </style>
 """, unsafe_allow_html=True)
 
 st.title("🛡️ SNTL — Edge AI Threat Reasoning Agent")
 st.caption("Microsoft Foundry IQ · Agents League Hackathon 2026 · Built for African network environments")
 
-# Initialize session state
 if "rsrp" not in st.session_state:
     st.session_state.rsrp = -90.0
 if "snr" not in st.session_state:
@@ -121,24 +119,24 @@ col1, col2 = st.columns([1, 2])
 with col1:
     st.subheader("📡 Sensor Input")
 
-    rsrp = st.slider("RSRP (dBm)", -140, -40,
-                     value=int(st.session_state.rsrp), key="slider_rsrp")
-    snr = st.slider("SNR (dB)", -20, 30,
-                    value=int(st.session_state.snr), key="slider_snr")
-    accel = st.slider("Accelerometer Z-axis (g)", 0.5, 7.0,
-                      value=float(st.session_state.accel), key="slider_accel")
-    voltage = st.slider("Battery Voltage (V)", 2.5, 4.5,
-                        value=float(st.session_state.voltage), key="slider_voltage")
-    st.metric("Channel Capacity", f"{compute_capacity(snr)} Mbps")
+    st.session_state.rsrp = st.slider("RSRP (dBm)", -140, -40,
+                                      value=int(st.session_state.rsrp))
+    st.session_state.snr = st.slider("SNR (dB)", -20, 30,
+                                     value=int(st.session_state.snr))
+    st.session_state.accel = st.slider("Accelerometer Z-axis (g)", 0.5, 7.0,
+                                       value=float(st.session_state.accel))
+    st.session_state.voltage = st.slider("Battery Voltage (V)", 2.5, 4.5,
+                                         value=float(st.session_state.voltage))
+    st.metric("Channel Capacity", f"{compute_capacity(st.session_state.snr)} Mbps")
 
     st.subheader("⚡ Preset Scenarios")
 
     presets = {
-    "🟢 NORMAL": {"rsrp": -90, "snr": 18, "accel": 1.0, "voltage": 3.9},
-    "🔵 ENVIRONMENTAL DEAD ZONE": {"rsrp": -123, "snr": 3, "accel": 1.0, "voltage": 3.85},
-    "🟡 FALSE POSITIVE": {"rsrp": -91, "snr": 16, "accel": 2.8, "voltage": 3.95},
-    "🔴 HOSTILE TAMPER": {"rsrp": -132, "snr": -5, "accel": 4.5, "voltage": 3.1},
-}
+        "🟢 NORMAL": {"rsrp": -90, "snr": 18, "accel": 1.0, "voltage": 3.9},
+        "🔵 ENVIRONMENTAL DEAD ZONE": {"rsrp": -123, "snr": 3, "accel": 1.0, "voltage": 3.85},
+        "🟡 FALSE POSITIVE": {"rsrp": -91, "snr": 16, "accel": 2.8, "voltage": 3.95},
+        "🔴 HOSTILE TAMPER": {"rsrp": -132, "snr": -5, "accel": 4.5, "voltage": 3.1},
+    }
 
     for label, values in presets.items():
         is_active = st.session_state.active_preset == label
