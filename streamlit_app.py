@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from data.telemetry_simulator import generate_event
 from azure.ai.agents import AgentsClient
-from azure.identity import DefaultAzureCredential
+from azure.core.credentials import AzureKeyCredential
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -33,10 +33,15 @@ def compute_capacity(snr_db):
     return round(5.0 * math.log2(1 + snr_linear), 2)
 
 def run_agent(rsrp, snr, accel, voltage):
+    endpoint = st.secrets.get("AZURE_PROJECT_ENDPOINT") or os.getenv("AZURE_PROJECT_ENDPOINT")
+    agent_id_val = st.secrets.get("AZURE_AGENT_ID") or os.getenv("AZURE_AGENT_ID")
+    api_key = st.secrets.get("AZURE_API_KEY") or os.getenv("AZURE_API_KEY")
+
     client = AgentsClient(
-        endpoint=os.getenv("AZURE_PROJECT_ENDPOINT"),
-        credential=DefaultAzureCredential()
+        endpoint=endpoint,
+        credential=AzureKeyCredential(api_key)
     )
+
     for attempt in range(3):
         try:
             thread = client.threads.create()
@@ -61,7 +66,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
             )
             run = client.runs.create_and_process(
                 thread_id=thread.id,
-                agent_id=os.getenv("AZURE_AGENT_ID")
+                agent_id=agent_id_val
             )
             messages = client.messages.list(thread_id=thread.id)
             for msg in messages:
@@ -71,7 +76,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
             if attempt < 2:
                 time.sleep(3)
             else:
-                return f"Connection error: {str(e)[:100]}"
+                return f"Connection error: {str(e)[:150]}"
 
 col1, col2 = st.columns([1, 2])
 
