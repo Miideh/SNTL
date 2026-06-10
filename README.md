@@ -43,7 +43,7 @@ grounded context before making a classification decision.
 
 ## Architecture
 
-\```
+```
 Raw Telemetry (RSRP · SNR · Accelerometer · Voltage)
                         ↓
             Python Telemetry Simulator
@@ -65,7 +65,7 @@ Raw Telemetry (RSRP · SNR · Accelerometer · Voltage)
          (Live at sntl-agent.streamlit.app)
                         ↓
         USSD SOS Payload Dispatch (Layer 1-2)
-\```
+```
 
 ## Threat Classification Levels
 
