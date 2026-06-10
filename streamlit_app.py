@@ -2,12 +2,7 @@ import streamlit as st
 import math
 import os
 import time
-import sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from data.telemetry_simulator import generate_event
-from azure.ai.agents import AgentsClient
-from azure.core.credentials import AzureKeyCredential
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,21 +29,16 @@ def compute_capacity(snr_db):
 
 def run_agent(rsrp, snr, accel, voltage):
     endpoint = st.secrets.get("AZURE_PROJECT_ENDPOINT") or os.getenv("AZURE_PROJECT_ENDPOINT")
-    agent_id_val = st.secrets.get("AZURE_AGENT_ID") or os.getenv("AZURE_AGENT_ID")
+    agent_id = st.secrets.get("AZURE_AGENT_ID") or os.getenv("AZURE_AGENT_ID")
     api_key = st.secrets.get("AZURE_API_KEY") or os.getenv("AZURE_API_KEY")
 
-    client = AgentsClient(
-        endpoint=endpoint,
-        credential=AzureKeyCredential(api_key)
-    )
+    headers = {
+        "api-key": api_key,
+        "Content-Type": "application/json"
+    }
+    base = endpoint.rstrip("/")
 
-    for attempt in range(3):
-        try:
-            thread = client.threads.create()
-            client.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=f"""Analyze this telemetry event and classify the threat:
+    prompt = f"""Analyze this telemetry event and classify the threat:
 
 INCOMING TELEMETRY EVENT
 ------------------------
@@ -63,20 +53,44 @@ STAGE 1 | SIGNAL ANALYSIS
 STAGE 2 | CROSS-SENSOR CORRELATION
 STAGE 3 | THREAT CLASSIFICATION
 STAGE 4 | RESPONSE RECOMMENDATION"""
-            )
-            run = client.runs.create_and_process(
-                thread_id=thread.id,
-                agent_id=agent_id_val
-            )
-            messages = client.messages.list(thread_id=thread.id)
-            for msg in messages:
-                if msg.role == "assistant":
-                    return msg.content[0].text.value
-        except Exception as e:
-            if attempt < 2:
-                time.sleep(3)
-            else:
-                return f"Connection error: {str(e)[:150]}"
+
+    try:
+        # Create thread
+        r = requests.post(f"{base}/threads", headers=headers, json={})
+        r.raise_for_status()
+        thread_id = r.json()["id"]
+
+        # Add message
+        requests.post(f"{base}/threads/{thread_id}/messages", headers=headers,
+                      json={"role": "user", "content": prompt})
+
+        # Create run
+        r = requests.post(f"{base}/threads/{thread_id}/runs", headers=headers,
+                          json={"assistant_id": agent_id})
+        r.raise_for_status()
+        run_id = r.json()["id"]
+
+        # Poll for completion
+        for _ in range(30):
+            time.sleep(2)
+            r = requests.get(f"{base}/threads/{thread_id}/runs/{run_id}", headers=headers)
+            status = r.json().get("status")
+            if status == "completed":
+                break
+            if status in ["failed", "cancelled", "expired"]:
+                return f"Run failed with status: {status}"
+
+        # Get messages
+        r = requests.get(f"{base}/threads/{thread_id}/messages", headers=headers)
+        messages = r.json().get("data", [])
+        for msg in messages:
+            if msg["role"] == "assistant":
+                return msg["content"][0]["text"]["value"]
+
+        return "No response received"
+
+    except Exception as e:
+        return f"Error: {str(e)[:150]}"
 
 col1, col2 = st.columns([1, 2])
 
