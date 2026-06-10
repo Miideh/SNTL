@@ -91,7 +91,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
         return "No response received"
 
     except Exception as e:
-        return f"Error: {str(e)[:150]}"
+        return f"Error: {str(e)[:200]}"
 
 col1, col2 = st.columns([1, 2])
 
