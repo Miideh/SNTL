@@ -37,7 +37,7 @@ def get_bearer_token():
         "grant_type": "client_credentials",
         "client_id": client_id,
         "client_secret": client_secret,
-        "scope": "https://cognitiveservices.azure.com/.default"
+        "scope": "https://ai.azure.com/.default"
     }
     r = requests.post(url, data=data)
     r.raise_for_status()
