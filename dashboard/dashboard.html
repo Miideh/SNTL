@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>SNTL Threat Reasoning Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== CSS RESET & BASE ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            /* Colors - Background */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #111111;
+            --bg-tertiary: #1a1a1a;
+
+            /* Colors - Border */
+            --border-color: #2a2a2a;
+            --border-subtle: #222222;
+
+            /* Colors - Text */
+            --text-primary: #e0e0e0;
+            --text-secondary: #aaaaaa;
+            --text-muted: #666666;
+
+            /* Colors - Accent */
+            --accent-amber: #ffb000;
+            --accent-green: #00ff88;
+            --accent-red: #ff4444;
+            --accent-cyan: #00d4ff;
+            --accent-yellow: #ffcc00;
+            --accent-purple: #aa66ff;
+            --accent-blue: #4a9eff;
+
+            /* Colors - Semantic */
+            --color-success: var(--accent-green);
+            --color-warning: var(--accent-amber);
+            --color-danger: var(--accent-red);
+            --color-info: var(--accent-cyan);
+
+            /* Shadows */
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.6);
+
+            /* Shadow - Accent glows */
+            --shadow-green: 0 0 20px rgba(0, 255, 136, 0.3);
+            --shadow-blue: 0 0 20px rgba(74, 158, 255, 0.3);
+            --shadow-amber: 0 0 20px rgba(255, 176, 0, 0.3);
+            --shadow-red: 0 0 20px rgba(255, 68, 68, 0.3);
+
+            /* Border Radius */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            --radius-full: 9999px;
+
+            /* Transitions */
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
+            --transition-slow: 400ms ease;
+            --transition-spring: 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+
+            /* Z-index scale */
+            --z-dropdown: 100;
+            --z-sticky: 200;
+            --z-modal: 300;
+            --z-tooltip: 400;
+        }
+
+        /* ===== BASE STYLES ===== */
+        html {
+            scroll-behavior: smooth;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @media (prefers-contrast: more) {
+            :root {
+                --border-color: #444444;
+                --text-muted: #888888;
+            }
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ===== SKIP LINK (ACCESSIBILITY) ===== */
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-decoration: none;
+            z-index: var(--z-tooltip);
+            transition: top var(--transition-fast);
+        }
+
+        .skip-link:focus {
+            top: var(--space-md);
+        }
+
+        /* ===== SELECTION STYLING ===== */
+        ::selection {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+
+        ::-moz-selection {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+        }
+
+        /* ===== SCROLLBAR STYLING ===== */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-sm);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: var(--radius-sm);
+            border: 2px solid var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        ::-webkit-scrollbar-corner {
+            background: var(--bg-secondary);
+        }
+
+        /* ===== LAYOUT ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--space-lg);
+            padding-top: calc(var(--space-lg) + env(safe-area-inset-top));
+            padding-bottom: calc(var(--space-lg) + env(safe-area-inset-bottom));
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-md);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-green));
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--bg-primary);
+            letter-spacing: 1px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: 4px;
+        }
+
+        .logo-subtitle {
+            font-size: 10px;
+            color: var(--accent-cyan);
+            letter-spacing: 2px;
+            margin-top: var(--space-xs);
+        }
+
+        /* ===== THREAT BADGE ===== */
+        .threat-badge {
+            padding: var(--space-md) 40px;
+            border-radius: var(--radius-md);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            transition: all var(--transition-normal);
+            border: 2px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .threat-badge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            100% { left: 100%; }
+        }
+
+        .threat-badge.level-0 {
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: var(--shadow-green);
+        }
+
+        .threat-badge.level-1 {
+            background: rgba(74, 158, 255, 0.1);
+            color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            box-shadow: var(--shadow-blue);
+        }
+
+        .threat-badge.level-2 {
+            background: rgba(255, 176, 0, 0.1);
+            color: var(--accent-amber);
+            border-color: var(--accent-amber);
+            box-shadow: var(--shadow-amber);
+        }
+
+        .threat-badge.level-3 {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--accent-red);
+            border-color: var(--accent-red);
+            box-shadow: var(--shadow-red);
+            animation: pulse-red 1s infinite;
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: var(--shadow-red); }
+            50% { box-shadow: 0 0 40px rgba(255, 68, 68, 0.5); }
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            display: grid;
+            grid-template-columns: 380px 1fr;
+            gap: var(--space-lg);
+            min-height: calc(100vh - 280px);
+        }
+
+        /* ===== CONTROLS PANEL ===== */
+        .controls-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-lg);
+            padding-bottom: var(--space-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-header::before {
+            content: '>';
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--accent-green);
+        }
+
+        /* ===== SLIDER GROUPS ===== */
+        .slider-group {
+            margin-bottom: var(--space-xl);
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+
+        .slider-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .slider-value {
+            font-size: 14px;
+            font-weight: 700;
+            padding: var(--space-xs) var(--space-sm);
+            border-radius: var(--radius-sm);
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .slider-value.rsrp { color: var(--accent-amber); }
+        .slider-value.snr { color: var(--accent-cyan); }
+        .slider-value.accel { color: var(--accent-purple); }
+        .slider-value.voltage { color: var(--accent-yellow); }
+
+        /* ===== SLIDER INPUT ===== */
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            outline: none;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+        }
+
+        input[type="range"]:focus-visible {
+            outline: 2px solid var(--accent-green);
+            outline-offset: 4px;
+            border-radius: var(--radius-sm);
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:active {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.9);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border: none;
+            border-radius: 50%;
+            background: var(--accent-green);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+            transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+
+        input[type="range"]::-moz-range-thumb:active {
+            transform: scale(1.1);
+        }
+
+        input[type="range"].rsrp::-webkit-slider-thumb { 
+            background: var(--accent-amber); 
+            box-shadow: 0 0 10px rgba(255, 176, 0, 0.5); 
+        }
+        input[type="range"].rsrp::-moz-range-thumb { 
+            background: var(--accent-amber); 
+            box-shadow: 0 0 10px rgba(255, 176, 0, 0.5); 
+        }
+        input[type="range"].snr::-webkit-slider-thumb { 
+            background: var(--accent-cyan); 
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5); 
+        }
+        input[type="range"].snr::-moz-range-thumb { 
+            background: var(--accent-cyan); 
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5); 
+        }
+        input[type="range"].accel::-webkit-slider-thumb { 
+            background: var(--accent-purple); 
+            box-shadow: 0 0 10px rgba(170, 102, 255, 0.5); 
+        }
+        input[type="range"].accel::-moz-range-thumb { 
+            background: var(--accent-purple); 
+            box-shadow: 0 0 10px rgba(170, 102, 255, 0.5); 
+        }
+        input[type="range"].voltage::-webkit-slider-thumb { 
+            background: var(--accent-yellow); 
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); 
+        }
+        input[type="range"].voltage::-moz-range-thumb { 
+            background: var(--accent-yellow); 
+            box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); 
+        }
+
+        .slider-markers {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-sm);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        /* ===== PRESETS SECTION ===== */
+        .presets-section {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .presets-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+        }
+
+        .presets-title {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .reset-btn {
+            padding: var(--space-xs) var(--space-sm);
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .reset-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .reset-btn:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 2px;
+        }
+
+        .preset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--space-sm);
+        }
+
+        .preset-btn {
+            position: relative;
+            padding: var(--space-sm) var(--space-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            text-transform: uppercase;
+            text-align: left;
+            padding-left: var(--space-lg);
+        }
+
+        .preset-btn::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--border-color);
+            transition: background var(--transition-fast);
+        }
+
+        .preset-btn:hover {
+            border-color: var(--accent-green);
+            box-shadow: var(--shadow-green);
+            transform: translateY(-2px);
+        }
+
+        .preset-btn:hover::before {
+            background: var(--accent-green);
+        }
+
+        .preset-btn:focus-visible {
+            outline: 2px solid var(--accent-green);
+            outline-offset: 2px;
+        }
+
+        .preset-btn.active {
+            background: rgba(0, 255, 136, 0.1);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .preset-btn.active::before {
+            background: var(--accent-green);
+        }
+
+        .preset-btn.normal { border-left: 3px solid var(--accent-green); }
+        .preset-btn.dead-zone { border-left: 3px solid var(--accent-blue); }
+        .preset-btn.false-positive { border-left: 3px solid var(--accent-amber); }
+        .preset-btn.hostile-tamper { border-left: 3px solid var(--accent-red); }
+
+        .preset-btn.normal.active { box-shadow: var(--shadow-green); }
+        .preset-btn.dead-zone.active { box-shadow: var(--shadow-blue); }
+        .preset-btn.false-positive.active { box-shadow: var(--shadow-amber); }
+        .preset-btn.hostile-tamper.active { box-shadow: var(--shadow-red); }
+
+        /* ===== TERMINAL PANEL ===== */
+        .terminal-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md) var(--space-lg);
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .terminal-title {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .terminal-dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #ff5f56; }
+        .terminal-dot.yellow { background: #ffbd2e; }
+        .terminal-dot.green { background: #27ca40; }
+
+        .terminal-status {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .terminal-body {
+            flex: 1;
+            padding: var(--space-lg);
+            overflow-y: auto;
+            background: var(--bg-primary);
+        }
+
+        .terminal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-body::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        .terminal-body::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: var(--radius-sm);
+        }
+
+        /* ===== CHANNEL CAPACITY ===== */
+        .channel-capacity {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-md);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .channel-capacity-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .channel-capacity-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        /* ===== WARNING PANEL ===== */
+        .warning-panel {
+            padding: var(--space-md);
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-md);
+        }
+
+        .warning-panel.warning-high {
+            background: rgba(255, 68, 68, 0.15);
+            animation: warning-pulse 1s infinite;
+        }
+
+        @keyframes warning-pulse {
+            0%, 100% { border-color: var(--accent-red); }
+            50% { border-color: rgba(255, 68, 68, 0.5); }
+        }
+
+        .warning-line {
+            font-size: 12px;
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        /* ===== REASONING STAGES ===== */
+        .reasoning-stage {
+            margin-bottom: var(--space-md);
+            animation: fadeSlideIn var(--transition-normal) ease-out backwards;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-bottom: var(--space-sm);
+        }
+
+        .stage-number {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 700;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+
+        .stage-number.active {
+            background: var(--accent-green);
+            color: var(--bg-primary);
+            border-color: var(--accent-green);
+        }
+
+        .stage-title {
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .stage-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: var(--space-md);
+            font-size: 12px;
+            line-height: 1.8;
+        }
+
+        .stage-content .label {
+            color: var(--text-muted);
+        }
+
+        .stage-content .value {
+            color: var(--accent-green);
+        }
+
+        .stage-content .highlight {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .stage-content .warning {
+            color: var(--accent-red);
+            font-weight: 600;
+        }
+
+        .stage-content .amber {
+            color: var(--accent-amber);
+        }
+
+        .stage-content .blue {
+            color: var(--accent-blue);
+        }
+
+        .level-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .level-badge.l0 { background: rgba(0, 255, 136, 0.2); color: var(--accent-green); }
+        .level-badge.l1 { background: rgba(74, 158, 255, 0.2); color: var(--accent-blue); }
+        .level-badge.l2 { background: rgba(255, 176, 0, 0.2); color: var(--accent-amber); }
+        .level-badge.l3 { background: rgba(255, 68, 68, 0.2); color: var(--accent-red); }
+
+        /* ===== PAYLOAD STAGE ===== */
+        .payload-stage {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1), rgba(255, 176, 0, 0.05));
+            border: 1px solid var(--accent-red);
+        }
+
+        .payload-line {
+            display: flex;
+            gap: var(--space-xs);
+            margin: var(--space-xs) 0;
+        }
+
+        .payload-key {
+            color: var(--text-muted);
+            min-width: 140px;
+        }
+
+        .payload-value {
+            color: var(--accent-amber);
+        }
+
+        .payload-hex {
+            color: var(--accent-green);
+        }
+
+        .channel-line {
+            margin: var(--space-xs) 0;
+            padding-left: 20px;
+        }
+
+        .channel-unavailable {
+            color: var(--accent-red);
+        }
+
+        .channel-available {
+            color: var(--accent-green);
+        }
+
+        .channel-selected {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        .transmit-status {
+            color: var(--accent-yellow);
+        }
+
+        .transmit-success {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        /* ===== CONFIDENCE SECTION ===== */
+        .confidence-section {
+            margin-top: var(--space-lg);
+            padding: var(--space-md);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+        }
+
+        .confidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-sm);
+        }
+
+        .confidence-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        .confidence-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .confidence-bar {
+            height: 6px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            border-radius: var(--radius-sm);
+            transition: width var(--transition-normal);
+        }
+
+        .timestamp {
+            margin-top: var(--space-lg);
+            font-size: 10px;
+            color: var(--text-muted);
+            text-align: right;
+            letter-spacing: 1px;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            letter-spacing: 1px;
+        }
+
+        .footer-brand {
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: var(--space-lg);
+                text-align: center;
+            }
+
+            .threat-badge {
+                font-size: 16px;
+                padding: var(--space-sm) var(--space-lg);
+            }
+
+            .logo-icon {
+                width: 44px;
+                height: 44px;
+                font-size: 12px;
+            }
+
+            .logo-text {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: var(--space-md);
+            }
+
+            .controls-panel {
+                padding: var(--space-md);
+            }
+
+            .preset-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .terminal-header {
+                flex-direction: column;
+                gap: var(--space-sm);
+            }
+
+            .payload-key {
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .logo-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .logo-text {
+                font-size: 18px;
+            }
+
+            .threat-badge {
+                font-size: 14px;
+                padding: var(--space-xs) var(--space-md);
+                letter-spacing: 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">SNTL</div>
+                <div>
+                    <div class="logo-text">SNTL</div>
+                    <div class="logo-subtitle">EDGE AI THREAT REASONING AGENT</div>
+                </div>
+            </div>
+            <div id="threatBadge" class="threat-badge level-0">NORMAL</div>
+        </header>
+
+        <main id="main-content" class="main-content">
+            <aside class="controls-panel">
+                <div class="panel-header">
+                    <span class="panel-title">SENSOR INPUT</span>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">RSRP (dBm)</span>
+                        <span id="rsrpValue" class="slider-value rsrp">-90</span>
+                    </div>
+                    <input type="range" id="rsrp" class="rsrp" min="-140" max="-40" value="-90" aria-label="RSRP signal strength">
+                    <div class="slider-markers">
+                        <span>-140</span><span>-120</span><span>-100</span><span>-80</span><span>-40</span>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">SNR (dB)</span>
+                        <span id="snrValue" class="slider-value snr">18</span>
+                    </div>
+                    <input type="range" id="snr" class="snr" min="-20" max="30" value="18" aria-label="Signal to noise ratio">
+                    <div class="slider-markers">
+                        <span>-20</span><span>-10</span><span>0</span><span>10</span><span>30</span>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">ACCELEROMETER (g)</span>
+                        <span id="accelValue" class="slider-value accel">1.0</span>
+                    </div>
+                    <input type="range" id="accel" class="accel" min="0" max="10" step="0.1" value="1.0" aria-label="Accelerometer reading">
+                    <div class="slider-markers">
+                        <span>0</span><span>2.5</span><span>5</span><span>7.5</span><span>10</span>
+                    </div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span class="slider-label">VOLTAGE (V)</span>
+                        <span id="voltageValue" class="slider-value voltage">3.9</span>
+                    </div>
+                    <input type="range" id="voltage" class="voltage" min="2.0" max="5.0" step="0.01" value="3.9" aria-label="Voltage reading">
+                    <div class="slider-markers">
+                        <span>2.0</span><span>2.75</span><span>3.5</span><span>4.25</span><span>5.0</span>
+                    </div>
+                </div>
+
+                <div class="presets-section">
+                    <div class="presets-header">
+                        <span class="presets-title">PRESET SCENARIOS</span>
+                        <button id="resetBtn" class="reset-btn" type="button">RESET</button>
+                    </div>
+                    <div class="preset-grid">
+                        <button class="preset-btn normal" data-preset="normal">NORMAL</button>
+                        <button class="preset-btn dead-zone" data-preset="dead-zone">ENVIRONMENTAL DEAD ZONE</button>
+                        <button class="preset-btn false-positive" data-preset="false-positive">FALSE POSITIVE</button>
+                        <button class="preset-btn hostile-tamper" data-preset="hostile-tamper">HOSTILE TAMPER</button>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="terminal-panel">
+                <div class="terminal-header">
+                    <div class="terminal-title">
+                        <div class="terminal-dots">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <span style="font-size: 12px; color: var(--text-muted);">reasoning_engine.log</span>
+                    </div>
+                    <div class="terminal-status">
+                        <span class="status-indicator"></span>
+                        <span>ANALYZING</span>
+                    </div>
+                </div>
+                <div class="terminal-body" id="terminalOutput"></div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <span class="footer-brand">SNTL</span> EDGE AI THREAT REASONING AGENT v1.0 | SECURE MONITORING SYSTEM
+        </footer>
+    </div>
+
+    <script>
+        const state = { rsrp: -90, snr: 18, accel: 1.0, voltage: 3.9 };
+
+        const presets = {
+            normal: { rsrp: -90, snr: 18, accel: 1.0, voltage: 3.9 },
+            'dead-zone': { rsrp: -123, snr: 3, accel: 1.0, voltage: 3.85 },
+            'false-positive': { rsrp: -91, snr: 16, accel: 2.8, voltage: 3.95 },
+            'hostile-tamper': { rsrp: -132, snr: -5, accel: 4.5, voltage: 3.1 }
+        };
+
+        const sliders = {
+            rsrp: document.getElementById('rsrp'),
+            snr: document.getElementById('snr'),
+            accel: document.getElementById('accel'),
+            voltage: document.getElementById('voltage')
+        };
+
+        const valueDisplays = {
+            rsrp: document.getElementById('rsrpValue'),
+            snr: document.getElementById('snrValue'),
+            accel: document.getElementById('accelValue'),
+            voltage: document.getElementById('voltageValue')
+        };
+
+        const threatBadge = document.getElementById('threatBadge');
+        const terminalOutput = document.getElementById('terminalOutput');
+
+        function calculateChannelCapacity(snr) {
+            const linearSnr = Math.pow(10, snr / 10);
+            return 5.0 * Math.log2(1 + linearSnr);
+        }
+
+        function classifyThreat() {
+            const { rsrp, snr, accel, voltage } = state;
+            
+            let level, label, confidence;
+
+            // Level 3: RSRP <= -115 AND SNR <= 0 AND Accel > 2.0 AND Voltage < 3.4
+            if (rsrp <= -115 && snr <= 0 && accel > 2.0 && voltage < 3.4) {
+                level = 3; label = 'HOSTILE TAMPER';
+                confidence = 85 + Math.random() * 10;
+            }
+            // Level 2: Accel > 2.0 AND RSRP > -105 AND Voltage >= 3.5
+            else if (accel > 2.0 && rsrp > -105 && voltage >= 3.5) {
+                level = 2; label = 'FALSE POSITIVE';
+                confidence = 75 + Math.random() * 15;
+            }
+            // Level 1: RSRP <= -110 AND SNR <= 5 AND Accel < 1.5 AND Voltage > 3.5
+            else if (rsrp <= -110 && snr <= 5 && accel < 1.5 && voltage > 3.5) {
+                level = 1; label = 'ENVIRONMENTAL DEAD ZONE';
+                confidence = 70 + Math.random() * 20;
+            }
+            // Level 0: everything else
+            else {
+                level = 0; label = 'NORMAL';
+                confidence = 90 + Math.random() * 8;
+            }
+
+            return { level, label, confidence: Math.min(confidence, 99.9) };
+        }
+
+        function generateOutput() {
+            const { level, label, confidence } = classifyThreat();
+            const channelCapacity = calculateChannelCapacity(state.snr);
+            const levelClass = `l${level}`;
+            const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+            let warningPanel = '';
+            if (level === 3) {
+                warningPanel = `<div class="warning-panel warning-high">
+                    <div class="warning-line">⚠ CRITICAL: HOSTILE TAMPER DETECTED</div>
+                    <div class="warning-line">⚠ INITIATING EMERGENCY PROTOCOL</div>
+                </div>`;
+            } else if (level === 2) {
+                warningPanel = `<div class="warning-panel">
+                    <div class="warning-line">⚠ CAUTION: FALSE POSITIVE SUSPECTED</div>
+                </div>`;
+            } else if (level === 1) {
+                warningPanel = `<div class="warning-panel" style="border-color: var(--accent-blue); background: rgba(74, 158, 255, 0.1);">
+                    <div class="warning-line" style="color: var(--accent-blue);">⚠ PREDICTIVE ALERT</div>
+                    <div style="font-size: 11px; margin-top: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; white-space: pre;">RSRP SLOPE    │ -2.3 dBm/sec ↓
+ETA TO DROP   │ ~28 seconds
+RECOMMENDATION│ Save work. End calls.
+              │ Signal recovery unlikely.
+HAPTIC PULSE  │ TRIGGERED (3 short pulses)</div>
+                </div>`;
+            }
+
+            let payloadStage = '';
+            if (level === 3) {
+                const gps = [6.5244, 3.3792];
+                const gpsHex = gps.map(v => parseInt(v).toString(16).padStart(2, '0')).join('');
+                const device = 'SNTL-NG-001';
+                const deviceHex = device.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                const timeHex = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+                const ussd = '\\x2f\\x2f' + deviceHex.substring(0, 8) + '*' + gpsHex.substring(0, 8) + '#';
+
+                payloadStage = `
+                    <div class="reasoning-stage payload-stage" style="animation-delay: 0.8s;">
+                        <div class="stage-header">
+                            <span class="stage-number active">5</span>
+                            <span class="stage-title">STAGE 5 | PAYLOAD DISPATCH</span>
+                        </div>
+                        <div class="stage-content">
+                            <div class="payload-line"><span class="payload-key">COMPRESSING PAYLOAD...</span></div>
+                            <div class="payload-line"><span class="payload-key">GPS</span><span class="payload-value">│ 06.5244°N 03.3792°E → <span class="payload-hex">${gpsHex}</span></span></div>
+                            <div class="payload-line"><span class="payload-key">DEVICE</span><span class="payload-value">│ SNTL-NG-001 → <span class="payload-hex">${deviceHex}</span></span></div>
+                            <div class="payload-line"><span class="payload-key">TIME</span><span class="payload-value">│ 1780579033 → <span class="payload-hex">${timeHex}</span></span></div>
+                            <div class="payload-line"><span class="payload-key">TOTAL</span><span class="payload-value">│ 58 bytes ✓ (limit: 60 bytes)</span></div>
+                            <br>
+                            <div class="payload-line"><span class="payload-key">SELECTING CHANNEL...</span></div>
+                            <div class="channel-line channel-unavailable">4G LTE │ ✗ UNAVAILABLE (RSRP -132 dBm)</div>
+                            <div class="channel-line channel-unavailable">3G HSPA │ ✗ UNAVAILABLE</div>
+                            <div class="channel-line channel-available">2G GSM │ ✓ ACTIVE (RSRP threshold met)</div>
+                            <div class="channel-line channel-selected">CHANNEL │ USSD FALLBACK SELECTED</div>
+                            <br>
+                            <div class="payload-line"><span class="payload-key">TRANSMITTING VIA USSD...</span></div>
+                            <div class="transmit-status">  ${ussd}</div>
+                            <div class="payload-line"><span class="payload-key">STATUS</span><span class="transmit-status">│ ⟳ DISPATCHING...</span></div>
+                            <div class="payload-line"><span class="payload-key">STATUS</span><span class="transmit-success">│ ✓ PAYLOAD DELIVERED — 58 bytes over 2G</span></div>
+                        </div>
+                    </div>`;
+            }
+
+            terminalOutput.innerHTML = `
+                <div class="channel-capacity">
+                    <span class="channel-capacity-label">CHANNEL CAPACITY</span>
+                    <span class="channel-capacity-value">${channelCapacity.toFixed(2)} Mbps</span>
+                </div>
+
+                ${warningPanel}
+
+                <div class="reasoning-stage" style="animation-delay: 0.1s;">
+                    <div class="stage-header">
+                        <span class="stage-number active">1</span>
+                        <span class="stage-title">STAGE 1 | SIGNAL ANALYSIS</span>
+                    </div>
+                    <div class="stage-content">
+                        <span class="label">RSRP:</span> <span class="${state.rsrp > -105 ? 'value' : state.rsrp > -115 ? 'amber' : 'warning'}">${state.rsrp} dBm</span><br>
+                        <span class="label">SNR:</span> <span class="${state.snr > 10 ? 'value' : state.snr > 0 ? 'amber' : 'warning'}">${state.snr} dB</span><br>
+                        <span class="label">Bandwidth:</span> <span class="value">5 MHz</span>
+                    </div>
+                </div>
+
+                <div class="reasoning-stage" style="animation-delay: 0.2s;">
+                    <div class="stage-header">
+                        <span class="stage-number active">2</span>
+                        <span class="stage-title">STAGE 2 | CROSS-SENSOR CORRELATION</span>
+                    </div>
+                    <div class="stage-content">
+                        <span class="label">Accelerometer:</span> <span class="${state.accel > 3 ? 'warning' : state.accel > 1.5 ? 'amber' : 'value'}">${state.accel.toFixed(1)} g</span><br>
+                        <span class="label">Voltage:</span> <span class="${state.voltage < 3.2 ? 'warning' : state.voltage < 3.5 ? 'amber' : 'value'}">${state.voltage.toFixed(2)} V</span><br>
+                        <span class="label">Correlation Score:</span> <span class="${level > 1 ? 'warning' : 'value'}">${(30 + Math.random() * 60).toFixed(1)}%</span>
+                    </div>
+                </div>
+
+                <div class="reasoning-stage" style="animation-delay: 0.4s;">
+                    <div class="stage-header">
+                        <span class="stage-number active">3</span>
+                        <span class="stage-title">STAGE 3 | THREAT CLASSIFICATION</span>
+                    </div>
+                    <div class="stage-content">
+                        <span class="label">LEVEL ${level}</span> <span class="level-badge ${levelClass}">${label}</span><br>
+                        <span class="label">CONFIDENCE:</span> <span class="value">${confidence.toFixed(1)}%</span>
+                    </div>
+                </div>
+
+                <div class="reasoning-stage" style="animation-delay: 0.6s;">
+                    <div class="stage-header">
+                        <span class="stage-number active">4</span>
+                        <span class="stage-title">STAGE 4 | RESPONSE RECOMMENDATION</span>
+                    </div>
+                    <div class="stage-content">
+                        ${level === 0 ? '<span class="value">CONTINUE NORMAL MONITORING</span>' : ''}
+                        ${level === 1 ? '<span class="blue">REPOSITION SENSOR — DEAD ZONE DETECTED</span>' : ''}
+                        ${level === 2 ? '<span class="amber">REVIEW ENVIRONMENTAL FACTORS — FALSE POSITIVE LIKELY</span>' : ''}
+                        ${level === 3 ? '<span class="warning">INITIATE SECURE PROTOCOL — HOSTILE TAMPER CONFIRMED</span>' : ''}
+                    </div>
+                </div>
+
+                ${payloadStage}
+
+                <div class="confidence-section">
+                    <div class="confidence-header">
+                        <span class="confidence-label">THREAT CONFIDENCE</span>
+                        <span class="confidence-value">${confidence.toFixed(1)}%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${confidence}%;"></div>
+                    </div>
+                </div>
+
+                <div class="timestamp">
+                    LAST UPDATED: ${timestamp} | PROCESSING_INTERVAL: 250ms
+                </div>
+            `;
+        }
+
+        Object.keys(sliders).forEach(key => {
+            sliders[key].addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                state[key] = value;
+                valueDisplays[key].textContent = key === 'accel' ? value.toFixed(1) : (key === 'voltage' ? value.toFixed(2) : value);
+                generateOutput();
+            });
+        });
+
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const preset = presets[btn.dataset.preset];
+                Object.keys(preset).forEach(key => {
+                    state[key] = preset[key];
+                    sliders[key].value = preset[key];
+                    valueDisplays[key].textContent = key === 'accel' ? preset[key].toFixed(1) : (key === 'voltage' ? preset[key].toFixed(2) : preset[key]);
+                });
+                document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                generateOutput();
+            });
+        });
+
+        // Reset button functionality
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            const defaultState = { rsrp: -90, snr: 18, accel: 1.0, voltage: 3.9 };
+            Object.keys(defaultState).forEach(key => {
+                state[key] = defaultState[key];
+                sliders[key].value = defaultState[key];
+                valueDisplays[key].textContent = key === 'accel' ? defaultState[key].toFixed(1) : (key === 'voltage' ? defaultState[key].toFixed(2) : defaultState[key]);
+            });
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+            generateOutput();
+        });
+
+        generateOutput();
+    </script>
+</body>
+</html>
