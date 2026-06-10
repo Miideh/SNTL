@@ -37,6 +37,7 @@ def run_agent(rsrp, snr, accel, voltage):
         "Content-Type": "application/json"
     }
     base = endpoint.rstrip("/")
+    API_VERSION = "?api-version=2024-05-01-preview"
 
     prompt = f"""Analyze this telemetry event and classify the threat:
 
@@ -56,16 +57,16 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
 
     try:
         # Create thread
-        r = requests.post(f"{base}/threads", headers=headers, json={})
+        r = requests.post(f"{base}/threads{API_VERSION}", headers=headers, json={})
         r.raise_for_status()
         thread_id = r.json()["id"]
 
         # Add message
-        requests.post(f"{base}/threads/{thread_id}/messages", headers=headers,
+        requests.post(f"{base}/threads/{thread_id}/messages{API_VERSION}", headers=headers,
                       json={"role": "user", "content": prompt})
 
         # Create run
-        r = requests.post(f"{base}/threads/{thread_id}/runs", headers=headers,
+        r = requests.post(f"{base}/threads/{thread_id}/runs{API_VERSION}", headers=headers,
                           json={"assistant_id": agent_id})
         r.raise_for_status()
         run_id = r.json()["id"]
@@ -73,7 +74,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
         # Poll for completion
         for _ in range(30):
             time.sleep(2)
-            r = requests.get(f"{base}/threads/{thread_id}/runs/{run_id}", headers=headers)
+            r = requests.get(f"{base}/threads/{thread_id}/runs/{run_id}{API_VERSION}", headers=headers)
             status = r.json().get("status")
             if status == "completed":
                 break
@@ -81,7 +82,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
                 return f"Run failed with status: {status}"
 
         # Get messages
-        r = requests.get(f"{base}/threads/{thread_id}/messages", headers=headers)
+        r = requests.get(f"{base}/threads/{thread_id}/messages{API_VERSION}", headers=headers)
         messages = r.json().get("data", [])
         for msg in messages:
             if msg["role"] == "assistant":
