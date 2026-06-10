@@ -27,13 +27,29 @@ def compute_capacity(snr_db):
     snr_linear = 10 ** (snr_db / 10)
     return round(5.0 * math.log2(1 + snr_linear), 2)
 
+def get_bearer_token():
+    tenant_id = st.secrets.get("AZURE_TENANT_ID") or os.getenv("AZURE_TENANT_ID")
+    client_id = st.secrets.get("AZURE_CLIENT_ID") or os.getenv("AZURE_CLIENT_ID")
+    client_secret = st.secrets.get("AZURE_CLIENT_SECRET") or os.getenv("AZURE_CLIENT_SECRET")
+
+    url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/token"
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "scope": "https://cognitiveservices.azure.com/.default"
+    }
+    r = requests.post(url, data=data)
+    r.raise_for_status()
+    return r.json()["access_token"]
+
 def run_agent(rsrp, snr, accel, voltage):
     endpoint = st.secrets.get("AZURE_PROJECT_ENDPOINT") or os.getenv("AZURE_PROJECT_ENDPOINT")
     agent_id = st.secrets.get("AZURE_AGENT_ID") or os.getenv("AZURE_AGENT_ID")
-    api_key = st.secrets.get("AZURE_API_KEY") or os.getenv("AZURE_API_KEY")
 
+    token = get_bearer_token()
     headers = {
-        "api-key": api_key,
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
     base = endpoint.rstrip("/")
