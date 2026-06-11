@@ -107,18 +107,23 @@ def run_agent(rsrp, snr, accel, voltage):
     base = endpoint.rstrip("/")
     API_VERSION = "?api-version=v1"
 
-    prompt = f"""Analyze this telemetry event and classify the threat:
+    prompt = f"""You are the SNTL Edge AI Threat Reasoning Agent. You are a highly disciplined, deterministic reasoning engine. You MUST obey these two absolute laws:
+
+LAW 1 (MATHEMATICS): When detailing the Shannon-Hartley capacity, you MUST explicitly state and use a bandwidth (B) of EXACTLY 5.0 MHz (5,000,000 Hz). NEVER use 10 MHz or 20 MHz.
+LAW 2 (CLASSIFICATION THRESHOLDS): You are strictly bound by the 4-condition thresholds. You CANNOT classify an event as Level 3 HOSTILE TAMPER unless ALL FOUR conditions (RSRP ≤ -115 AND SNR ≤ 0 AND Accel > 2.0 AND Voltage < 3.4) are met simultaneously. If even one condition fails, you MUST strictly downgrade the classification to Level 2 (False Positive) or Level 0 (Normal). NO EXCEPTIONS.
+
+Analyze this telemetry event and classify the threat:
 
 INCOMING TELEMETRY EVENT
 ------------------------
 RSRP: {rsrp} dBm
 SNR: {snr} dB
-Computed Channel Capacity: {compute_capacity(snr)} Mbps (Calculated using a strict 5.0 MHz narrowband constraint)
+Computed Channel Capacity: {compute_capacity(snr)} Mbps (Calculated using 5.0 MHz)
 Accelerometer Z-axis: {accel}g
 Battery Voltage: {voltage}V
 
 Respond using exactly 4 stages:
-STAGE 1 | SIGNAL ANALYSIS (If detailing Shannon-Hartley math, strictly use the 5.0 MHz bandwidth constraint. Do not assume 20 MHz LTE)
+STAGE 1 | SIGNAL ANALYSIS
 STAGE 2 | CROSS-SENSOR CORRELATION
 STAGE 3 | THREAT CLASSIFICATION
 STAGE 4 | RESPONSE RECOMMENDATION"""
@@ -175,8 +180,34 @@ with col1:
                                        value=float(st.session_state.accel))
     st.session_state.voltage = st.slider("Battery Voltage (V)", 2.5, 4.5,
                                          value=float(st.session_state.voltage))
+    
     st.metric("Channel Capacity",
               f"{compute_capacity(st.session_state.snr)} Mbps")
+
+    # --- NEW LIVE CLASSIFICATION BADGE ---
+    current_level = get_threat_level(
+        st.session_state.rsrp, 
+        st.session_state.snr, 
+        st.session_state.accel, 
+        st.session_state.voltage
+    )
+    
+    level_ui = {
+        0: ("🟢 NORMAL", "#00ff88"),
+        1: ("🔵 ENVIRONMENTAL DEAD ZONE", "#4a9eff"),
+        2: ("🟡 FALSE POSITIVE", "#ffaa00"),
+        3: ("🔴 HOSTILE TAMPER", "#ff4444")
+    }
+    
+    current_label, current_color = level_ui[current_level]
+    
+    st.markdown(f"""
+    <div style="border: 1px solid {current_color}; background: {current_color}15; padding: 10px 15px; margin-top: 15px; margin-bottom: 25px;">
+        <div style="color: #888; font-size: 11px; font-family: monospace; margin-bottom: 4px;">LOCAL PRE-CHECK CLASSIFICATION</div>
+        <div style="color: {current_color}; font-weight: bold; font-family: monospace; font-size: 14px;">{current_label}</div>
+    </div>
+    """, unsafe_allow_html=True)
+    # --- END NEW LIVE CLASSIFICATION BADGE ---
 
     st.subheader("⚡ Preset Scenarios")
 
