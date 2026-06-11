@@ -83,6 +83,33 @@ Raw Telemetry (RSRP · SNR · Accelerometer · Voltage)
 - **Python** — telemetry simulation + agent logic
 - **Streamlit** — live demo dashboard
 
+## Responsible AI
+
+SNTL is designed with safety-critical deployment in mind. Three core
+guardrails are built into the multi-agent pipeline:
+
+- **False Positive Protection:** Agent 3 applies a strict 4-condition
+  classification threshold before escalating to Level 3 HOSTILE TAMPER.
+  A single anomalous sensor reading is never sufficient — all four
+  conditions (RSRP, SNR, accelerometer, voltage) must breach their
+  respective thresholds simultaneously. This prevents wasted alerts
+  and unnecessary USSD dispatch in noisy environments.
+
+- **Human Oversight:** SNTL recommends and prepares the USSD SOS payload
+  but surfaces the classification reasoning transparently at every stage.
+  The confidence score and 4-stage reasoning chain are always visible to
+  the operator before any action is taken. No alert is dispatched without
+  a clear, cited justification from the Foundry IQ knowledge base.
+
+- **Observability and Telemetry:** All agent runs are logged automatically
+  via Azure AI Foundry's built-in telemetry. Agent run volume, success
+  rates, token usage, and response latency are tracked in the Foundry
+  Operate dashboard — providing full auditability of every classification
+  decision made by the pipeline.
+
+All data used in this system is synthetic. No real user data, PII, or
+proprietary network information is included in any part of the pipeline.
+
 ## Built by
 
 [Ayomide Adesanya](https://linkedin.com/in/adesanya-ayomide)
