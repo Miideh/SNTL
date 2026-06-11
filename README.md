@@ -1,8 +1,8 @@
 # SNTL — Edge AI Threat Reasoning Agent
 
-> A multi-agent system that certifies field device integrity for network 
-> engineers operating in degraded African network environments — using 
-> grounded reasoning via Microsoft Foundry IQ to classify RF and sensor 
+> A multi-agent system that certifies field device integrity for network
+> engineers operating in degraded African network environments — using
+> grounded reasoning via Microsoft Foundry IQ to classify RF and sensor
 > telemetry before field deployment.
 
 **Agents League Hackathon 2026 · Reasoning Agents Track · Microsoft Foundry**
