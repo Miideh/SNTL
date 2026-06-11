@@ -1,9 +1,9 @@
 # SNTL — Edge AI Threat Reasoning Agent
 
-> A multi-step reasoning agent that classifies physical device tamper
-> events from raw RF and sensor telemetry — built for extreme network
-> environments where the cloud is unreachable and 2G is the last line
-> of communication.
+> A multi-agent system that certifies field device integrity for network 
+> engineers operating in degraded African network environments — using 
+> grounded reasoning via Microsoft Foundry IQ to classify RF and sensor 
+> telemetry before field deployment.
 
 **Agents League Hackathon 2026 · Reasoning Agents Track · Microsoft Foundry**
 
@@ -13,26 +13,120 @@
 
 ## The Problem
 
-In high-risk environments across Africa, standard mobile security apps
-fail at the worst moment. When a device is physically tampered with,
-the cloud connection dies first. HTTP timeout loops are too slow.
-The device goes dark before any alert is sent.
+Telecoms field engineers across Africa deploy and maintain network equipment
+in environments where signal degradation, physical tampering, and hostile RF
+conditions are routine. Before deployment, engineers need to certify that their
+devices are operating within safe signal parameters — but standard tools assume
+persistent cloud connectivity that simply does not exist in many African field
+environments.
+
+When a device is physically tampered with or enters a hostile RF environment,
+the cloud connection dies first. HTTP timeout loops are too slow. The device
+goes dark before any certification alert is sent.
 
 ## What SNTL Does
 
-SNTL monitors raw RF telemetry (RSRP, SNR) and on-device sensor data
-(accelerometer, voltage) to detect hostile tamper events — then triggers
-a compressed SOS payload over USSD before complete hardware failure.
+SNTL is a multi-agent field certification system that monitors raw RF telemetry
+(RSRP, SNR) and on-device sensor data (accelerometer, voltage) to assess device
+integrity and certify field readiness — then triggers a compressed SOS payload
+over USSD before complete hardware failure if a hostile event is detected.
 
-It bypasses HTTP/TCP entirely, operating at OSI Layer 1–2 where 2G
-channels survive when 4G has already dropped.
+It bypasses HTTP/TCP entirely, operating at OSI Layer 1–2 where 2G channels
+survive when 4G has already dropped.
 
-## How Foundry IQ Powers It
+## Multi-Agent Architecture
 
-Foundry IQ serves as the grounded knowledge retrieval layer — storing
-the threat taxonomy, RF degradation signatures, and sensor correlation
-rules. At each reasoning step, the agent queries Foundry IQ for cited,
-grounded context before making a classification decision.
+SNTL implements a 4-agent pipeline. Each agent has a defined responsibility
+and hands off to the next in sequence:
+
+### Agent 1 — Signal Analysis Agent
+
+**Responsibility:** Evaluate incoming RF telemetry (RSRP, SNR) and compute
+channel capacity using the Shannon-Hartley theorem.  
+**Grounding:** Queries Foundry IQ for RF degradation signatures and normal
+variance thresholds.  
+**Output:** Signal anomaly verdict + computed channel capacity (Mbps)
+
+### Agent 2 — Correlation Agent
+
+**Responsibility:** Cross-reference accelerometer and voltage readings against
+the RF anomaly verdict from Agent 1.  
+**Grounding:** Queries Foundry IQ for sensor correlation rules that distinguish
+physical tamper from environmental dead zones.  
+**Output:** Correlation verdict — tamper hypothesis confirmed or rejected
+
+### Agent 3 — Classification Agent
+
+**Responsibility:** Classify the device event into one of four certification
+states based on combined signal and sensor evidence.  
+**Grounding:** Queries Foundry IQ threat taxonomy for cited classification rules.  
+**Output:** Certification level with confidence score
+
+| Level | Classification | Trigger Conditions |
+|-------|---------------|-------------------|
+| 3 | 🔴 HOSTILE TAMPER | RSRP ≤ -115, SNR ≤ 0, Accel > 2.0g, Voltage < 3.4V |
+| 2 | 🟡 FALSE POSITIVE | Accel > 2.0g, RSRP > -105, Voltage ≥ 3.5V |
+| 1 | 🔵 ENVIRONMENTAL DEAD ZONE | RSRP ≤ -110, SNR ≤ 5, Accel < 1.5g, Voltage > 3.5V |
+| 0 | 🟢 NORMAL | All other conditions |
+
+### Agent 4 — Response Agent
+
+**Responsibility:** Recommend and execute the appropriate field response based
+on the classification from Agent 3.  
+**Grounding:** Queries Foundry IQ for response protocols mapped to each
+certification level.  
+**Output:** Recommended action — continue, hold, or dispatch USSD SOS payload
+
+---
+
+## Orchestration Flow
+
+```
+Field Engineer Device
+        ↓
+Raw Telemetry (RSRP · SNR · Accelerometer · Voltage)
+        ↓
+┌─────────────────────────────────┐
+│  Agent 1: Signal Analysis       │ ← Foundry IQ: RF Signatures
+│  Shannon-Hartley computation    │
+└────────────────┬────────────────┘
+                 ↓
+┌─────────────────────────────────┐
+│  Agent 2: Correlation           │ ← Foundry IQ: Sensor Rules
+│  RF + Sensor cross-reference    │
+└────────────────┬────────────────┘
+                 ↓
+┌─────────────────────────────────┐
+│  Agent 3: Classification        │ ← Foundry IQ: Threat Taxonomy
+│  Level 0–3 with confidence %    │
+└────────────────┬────────────────┘
+                 ↓
+┌─────────────────────────────────┐
+│  Agent 4: Response              │ ← Foundry IQ: Response Protocols
+│  Action recommendation          │
+│  USSD SOS dispatch if Level 3   │
+└────────────────┬────────────────┘
+                 ↓
+     Streamlit Dashboard
+  (sntl-agent.streamlit.app)
+```
+
+---
+
+## How Foundry IQ Powers SNTL
+
+Foundry IQ serves as the grounded knowledge retrieval layer across all 4 agents.
+The knowledge base contains three synthetic documents:
+
+- **Threat Taxonomy** — classification rules for all 4 threat levels
+- **RF Degradation Signatures** — known signal patterns for tamper vs dead zone
+- **Sensor Correlation Rules** — how accelerometer and voltage relate to RF events
+
+At each reasoning step, the active agent queries Foundry IQ for cited, grounded
+context before making a decision. This eliminates hallucination in a
+safety-critical setting where a false negative means silence during a real attack.
+
+---
 
 ## Reasoning Chain
 
@@ -40,6 +134,19 @@ grounded context before making a classification decision.
 2. **Cross-sensor Correlation** — Does accelerometer/voltage data confirm it?
 3. **Threat Classification** — Hostile tamper, environmental dead zone, or false positive?
 4. **Response Recommendation** — Compress and transmit, hold, or discard?
+
+## Knowledge Base (Synthetic Data)
+
+All data used in this project is synthetic and for demonstration purposes only.
+No real customer data, PII, or proprietary information is included.
+
+The Foundry IQ knowledge base contains:
+
+- `threat_taxonomy.md` — synthetic threat classification rules
+- `rf_degradation_signatures.md` — synthetic RF signal patterns
+- `sensor_correlation_rules.md` — synthetic sensor-RF correlation rules
+
+---
 
 ## Architecture
 
@@ -67,21 +174,33 @@ Raw Telemetry (RSRP · SNR · Accelerometer · Voltage)
         USSD SOS Payload Dispatch (Layer 1-2)
 ```
 
-## Threat Classification Levels
-
-| Level | Classification | Trigger Conditions |
-|-------|---------------|-------------------|
-| 3 | 🔴 HOSTILE TAMPER | RSRP ≤ -115, SNR ≤ 0, Accel > 2.0g, Voltage < 3.4V |
-| 2 | 🟡 FALSE POSITIVE | Accel > 2.0g, RSRP > -105, Voltage ≥ 3.5V |
-| 1 | 🔵 ENVIRONMENTAL DEAD ZONE | RSRP ≤ -110, SNR ≤ 5, Accel < 1.5g, Voltage > 3.5V |
-| 0 | 🟢 NORMAL | All other conditions |
-
 ## Stack
 
 - **Microsoft Foundry IQ** — grounded knowledge retrieval
 - **Azure AI Foundry** — agent orchestration (Sweden Central)
 - **Python** — telemetry simulation + agent logic
 - **Streamlit** — live demo dashboard
+
+## Repository Structure
+
+```
+SNTL/
+├── agent/
+│   └── sntl_agent.py          # 4-agent reasoning pipeline
+├── data/
+│   └── telemetry_simulator.py # Synthetic telemetry generator
+├── knowledge/
+│   ├── threat_taxonomy.md
+│   ├── rf_degradation_signatures.md
+│   └── sensor_correlation_rules.md
+├── dashboard/
+│   └── dashboard.html         # Frontend dashboard (Kesar Bavaria)
+├── streamlit_app.py           # Live demo interface
+├── requirements.txt
+└── README.md
+```
+
+---
 
 ## Responsible AI
 
