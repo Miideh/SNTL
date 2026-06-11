@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="'JetBrains Mono', 'Courier New', monospace">
+  <!-- Background -->
+  <rect width="900" height="620" fill="#0a0a0a"/>
+  
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" fill="#00ff88" font-size="18" font-weight="bold" letter-spacing="3">SNTL — MULTI-AGENT ARCHITECTURE</text>
+  <text x="450" y="62" text-anchor="middle" fill="#555" font-size="11">Microsoft Foundry IQ · Azure AI Foundry · Reasoning Agents Track</text>
+
+  <!-- Divider -->
+  <line x1="60" y1="75" x2="840" y2="75" stroke="#1a1a1a" stroke-width="1"/>
+
+  <!-- INPUT BOX -->
+  <rect x="300" y="90" width="300" height="60" rx="4" fill="#0f1f0f" stroke="#00ff88" stroke-width="1.5"/>
+  <text x="450" y="114" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">FIELD DEVICE TELEMETRY</text>
+  <text x="450" y="132" text-anchor="middle" fill="#888" font-size="10">RSRP · SNR · Accelerometer · Voltage</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="150" x2="450" y2="175" stroke="#00ff88" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- AGENT 1 -->
+  <rect x="120" y="175" width="660" height="70" rx="4" fill="#0a1a0a" stroke="#00cc66" stroke-width="1"/>
+  <rect x="120" y="175" width="4" height="70" rx="2" fill="#00cc66"/>
+  <text x="148" y="197" fill="#00cc66" font-size="10" font-weight="bold">AGENT 1 — SIGNAL ANALYSIS</text>
+  <text x="148" y="213" fill="#666" font-size="10">Evaluates RF telemetry · Computes channel capacity via Shannon-Hartley</text>
+  <text x="148" y="228" fill="#444" font-size="10">C = B × log₂(1 + S/N) · Flags anomaly if RSRP or SNR breaches threshold</text>
+  <!-- Foundry IQ tag -->
+  <rect x="680" y="188" width="90" height="20" rx="3" fill="#001a33" stroke="#4a9eff" stroke-width="1"/>
+  <text x="725" y="202" text-anchor="middle" fill="#4a9eff" font-size="9">Foundry IQ ↗</text>
+  <text x="725" y="218" text-anchor="middle" fill="#334" font-size="8">RF Signatures</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="245" x2="450" y2="270" stroke="#00cc66" stroke-width="1.5" marker-end="url(#arrow2)"/>
+
+  <!-- AGENT 2 -->
+  <rect x="120" y="270" width="660" height="70" rx="4" fill="#0a1a0a" stroke="#00cc66" stroke-width="1"/>
+  <rect x="120" y="270" width="4" height="70" rx="2" fill="#00cc66"/>
+  <text x="148" y="292" fill="#00cc66" font-size="10" font-weight="bold">AGENT 2 — CORRELATION</text>
+  <text x="148" y="308" fill="#666" font-size="10">Cross-references accelerometer + voltage against RF anomaly verdict</text>
+  <text x="148" y="323" fill="#444" font-size="10">Confirms or rejects tamper hypothesis · Distinguishes physical event from dead zone</text>
+  <rect x="680" y="283" width="90" height="20" rx="3" fill="#001a33" stroke="#4a9eff" stroke-width="1"/>
+  <text x="725" y="297" text-anchor="middle" fill="#4a9eff" font-size="9">Foundry IQ ↗</text>
+  <text x="725" y="313" text-anchor="middle" fill="#334" font-size="8">Sensor Rules</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="340" x2="450" y2="365" stroke="#00cc66" stroke-width="1.5" marker-end="url(#arrow3)"/>
+
+  <!-- AGENT 3 -->
+  <rect x="120" y="365" width="660" height="70" rx="4" fill="#0a1a0a" stroke="#00cc66" stroke-width="1"/>
+  <rect x="120" y="365" width="4" height="70" rx="2" fill="#00cc66"/>
+  <text x="148" y="387" fill="#00cc66" font-size="10" font-weight="bold">AGENT 3 — CLASSIFICATION</text>
+  <text x="148" y="403" fill="#666" font-size="10">Classifies event into Level 0–3 with confidence score</text>
+  <text x="148" y="418" fill="#444" font-size="10">🟢 NORMAL · 🔵 DEAD ZONE · 🟡 FALSE POSITIVE · 🔴 HOSTILE TAMPER</text>
+  <rect x="680" y="378" width="90" height="20" rx="3" fill="#001a33" stroke="#4a9eff" stroke-width="1"/>
+  <text x="725" y="392" text-anchor="middle" fill="#4a9eff" font-size="9">Foundry IQ ↗</text>
+  <text x="725" y="408" text-anchor="middle" fill="#334" font-size="8">Threat Taxonomy</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="435" x2="450" y2="460" stroke="#00cc66" stroke-width="1.5" marker-end="url(#arrow4)"/>
+
+  <!-- AGENT 4 -->
+  <rect x="120" y="460" width="660" height="70" rx="4" fill="#0a1a0a" stroke="#00cc66" stroke-width="1"/>
+  <rect x="120" y="460" width="4" height="70" rx="2" fill="#00cc66"/>
+  <text x="148" y="482" fill="#00cc66" font-size="10" font-weight="bold">AGENT 4 — RESPONSE</text>
+  <text x="148" y="498" fill="#666" font-size="10">Recommends action · Dispatches USSD SOS payload if Level 3</text>
+  <text x="148" y="513" fill="#444" font-size="10">Bypasses HTTP/TCP · Operates at OSI Layer 1–2 · 58-byte payload over 2G GSM</text>
+  <rect x="680" y="473" width="90" height="20" rx="3" fill="#001a33" stroke="#4a9eff" stroke-width="1"/>
+  <text x="725" y="487" text-anchor="middle" fill="#4a9eff" font-size="9">Foundry IQ ↗</text>
+  <text x="725" y="503" text-anchor="middle" fill="#334" font-size="8">Response Protocols</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="530" x2="450" y2="555" stroke="#00ff88" stroke-width="1.5" marker-end="url(#arrow5)"/>
+
+  <!-- OUTPUT -->
+  <rect x="200" y="555" width="500" height="50" rx="4" fill="#0f1f0f" stroke="#00ff88" stroke-width="1.5"/>
+  <text x="450" y="576" text-anchor="middle" fill="#00ff88" font-size="11" font-weight="bold">STREAMLIT DASHBOARD</text>
+  <text x="450" y="593" text-anchor="middle" fill="#555" font-size="10">sntl-agent.streamlit.app · Azure AI Foundry · Sweden Central</text>
+
+  <!-- Foundry IQ Side Label -->
+  <rect x="30" y="175" width="75" height="355" rx="4" fill="#00060f" stroke="#4a9eff" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="67" y="340" text-anchor="middle" fill="#4a9eff" font-size="10" font-weight="bold" transform="rotate(-90, 67, 340)">MICROSOFT FOUNDRY IQ — KNOWLEDGE LAYER</text>
+
+  <!-- Arrow markers -->
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#00ff88"/>
+    </marker>
+    <marker id="arrow2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#00cc66"/>
+    </marker>
+    <marker id="arrow3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#00cc66"/>
+    </marker>
+    <marker id="arrow4" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#00cc66"/>
+    </marker>
+    <marker id="arrow5" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#00ff88"/>
+    </marker>
+  </defs>
+</svg>
