@@ -113,12 +113,12 @@ INCOMING TELEMETRY EVENT
 ------------------------
 RSRP: {rsrp} dBm
 SNR: {snr} dB
-Computed Channel Capacity: {compute_capacity(snr)} Mbps
+Computed Channel Capacity: {compute_capacity(snr)} Mbps (Calculated using a strict 5.0 MHz narrowband constraint)
 Accelerometer Z-axis: {accel}g
 Battery Voltage: {voltage}V
 
 Respond using exactly 4 stages:
-STAGE 1 | SIGNAL ANALYSIS
+STAGE 1 | SIGNAL ANALYSIS (If detailing Shannon-Hartley math, strictly use the 5.0 MHz bandwidth constraint. Do not assume 20 MHz LTE)
 STAGE 2 | CROSS-SENSOR CORRELATION
 STAGE 3 | THREAT CLASSIFICATION
 STAGE 4 | RESPONSE RECOMMENDATION"""
