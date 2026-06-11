@@ -27,8 +27,18 @@ Accelerometer Z-axis: {event.accel_z:.2f}g
 Battery Voltage: {event.voltage:.2f}V"""
 
 def run_sntl_agent(event: TelemetryEvent) -> str:
+    # Support both naming conventions
+    endpoint = (
+        os.getenv("AZURE_PROJECT_ENDPOINT") or
+        os.getenv("AZURE_AI_PROJECT_ENDPOINT")
+    )
+    agent_id = (
+        os.getenv("AZURE_AGENT_ID") or
+        os.getenv("AZURE_AI_AGENT_ID")
+    )
+
     client = AgentsClient(
-        endpoint=os.getenv("AZURE_PROJECT_ENDPOINT"),
+        endpoint=endpoint,
         credential=DefaultAzureCredential()
     )
 
@@ -54,7 +64,7 @@ STAGE 4 | RESPONSE RECOMMENDATION"""
 
             run = client.runs.create_and_process(
                 thread_id=thread.id,
-                agent_id=os.getenv("AZURE_AGENT_ID")
+                agent_id=agent_id
             )
 
             messages = client.messages.list(thread_id=thread.id)
